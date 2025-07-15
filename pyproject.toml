@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jobrec"    
+version = "0.0.1"
+description = "Resume-to-Job recommender"
+readme = ""
+authors = [{ name = "Tristan Peters" }]
+requires-python = ">=3.12"
+
+[tool.setuptools]
+packages = {find = {where = ["src"]}}

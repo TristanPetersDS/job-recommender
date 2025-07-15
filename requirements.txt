@@ -1,0 +1,30 @@
+# ─── Data wrangling ─────────────────────────────────────
+pandas~=2.3          
+numpy~=2.3         
+
+# ─── Visualisation ─────────────────────────────────────
+matplotlib~=3.9
+seaborn~=0.13
+wordcloud~=1.9
+
+# ─── NLP / ML ──────────────────────────────────────────
+nltk~=3.9
+spacy[en_core_web_sm]~=3.7
+sentence-transformers~=4.1   
+scikit-learn~=1.7
+
+# ─── Parallel / Utils ─────────────────────────────────
+pandarallel~=1.6
+joblib~=1.4
+tqdm~=4.66
+
+# ─── Vector search ────────────────────────────────────
+# faiss-cpu~=1.8   
+
+# ─── Notebook UX ───────────────────────────
+ipywidgets~=8.1
+jupyterlab~=4.2
+
+# ─── Future ATS / LLM step ────────────────────────────
+#openai~=1.30
+#python-dotenv~=1.0
