@@ -8,26 +8,44 @@ import os
 from pathlib import Path
 
 # ╭──────────────────────────────────────────────────────────╮
+# │                   PROJECT CONFIG                         │
+# ╰──────────────────────────────────────────────────────────╯
+QUICKRUN         = True # False for full dataset
+N_SAMPLE_RESUMES = 2000
+N_SAMPLE_JOBS    = 5000
+RANDOM_SEED      = 42
+NUM_CORES        = os.cpu_count() or 4
+
+
+# ╭──────────────────────────────────────────────────────────╮
 # │                       PATHS                              │
 # ╰──────────────────────────────────────────────────────────╯
-ROOT_DIR: Path = Path(__file__).resolve().parents[2]
+ROOT_DIR: Path     = Path(__file__).resolve().parents[2]
 
-DATA_DIR         = ROOT_DIR / "data"
-RAW_DATA_DIR     = DATA_DIR / "raw"
-INTERIM_DATA_DIR = DATA_DIR / "interim"
+DATA_DIR           = ROOT_DIR / "data"
+RAW_DATA_DIR       = DATA_DIR / "raw"
+INTERIM_DATA_DIR   = DATA_DIR / "interim"
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
+CORPUS_DATA_DIR    = INTERIM_DATA_DIR / "corpus"
 
-MODELS_DIR  = ROOT_DIR / "models"
-EMB_DIR     = ROOT_DIR / "embeddings"
-REPORT_DIR  = ROOT_DIR / "reports"
-FIGURES_DIR = REPORT_DIR / "figures"
+MODELS_DIR         = ROOT_DIR / "models"
+EMB_DIR            = ROOT_DIR / "embeddings"
+REPORT_DIR         = ROOT_DIR / "reports"
+FIGURES_DIR        = REPORT_DIR / "figures"
 
 # create dirs if they don't exist (safe in import time)
 for _p in (
     INTERIM_DATA_DIR, PROCESSED_DATA_DIR, MODELS_DIR,
-    EMB_DIR, FIGURES_DIR
+    EMB_DIR, FIGURES_DIR, CORPUS_DATA_DIR
 ):
     _p.mkdir(parents=True, exist_ok=True)
+
+# ╭──────────────────────────────────────────────────────────╮
+# │                     DATA VIS                             │
+# ╰──────────────────────────────────────────────────────────╯
+# Color palettes
+PLOT_PALETTE        = 'tableau-colorblind10'
+WORDCLOUD_COLOR_MAP = 'tab10_r'
 
 # ╭──────────────────────────────────────────────────────────╮
 # │                     NLP / ML                             │
@@ -52,19 +70,13 @@ RESUME_CATEGORIES = [
 ]
 
 # List of Job Skills
-SKILLS = ['javascript', 'node.js', 'aws', 'kubernetes', 'go lang', 'ruby', 'python', 'sql', 'java', 
+SKILLS  = ['javascript', 'node.js', 'aws', 'kubernetes', 'go lang', 'ruby', 'python', 'sql', 'java', 
           'docker', 'html', 'management', 'engineering', 'marketing', 'design', 'sales', 'software', 
           'development', 'communication', 'leadership', 'installation', 'technical', 'automation', 'power systems']
 
 # List of Industry Domains
 DOMAINS = ['healthcare', 'finance', 'tech', 'education', 'manufacturing', 'retail', 'sales', 
            'construction', 'hospitality', 'engineering', 'legal', 'marketing', 'government']
-
-# ╭──────────────────────────────────────────────────────────╮
-# │                 Parallel / Random seed                   │
-# ╰──────────────────────────────────────────────────────────╯
-NUM_CORES      = os.cpu_count() or 4
-RANDOM_STATE   = 42
 
 # ╭──────────────────────────────────────────────────────────╮
 # │                 Logging / Verbosity                      │
