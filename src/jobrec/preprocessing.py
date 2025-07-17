@@ -1,18 +1,18 @@
 import os
 import re, string, pandas as pd
 import spacy, nltk
+from spacy.tokens import DocBin
 from tqdm import tqdm
 
 from pandarallel import pandarallel
 
-from .config import SKILLS, DOMAINS
+from .config import NUM_CORES, SKILLS, DOMAINS, SPACY_MODEL_NAME
 
 # Initialize nlp pipeline
-_nlp = spacy.load("en_core_web_sm")
+_nlp = spacy.load(SPACY_MODEL_NAME)
 
 # Initialize pandarallel for parallelization
-cpu_cores = os.cpu_count()
-pandarallel.initialize(nb_workers=cpu_cores)
+pandarallel.initialize(nb_workers=NUM_CORES)
 
 def preprocessing_pipeline(
     df: pd.DataFrame,
@@ -33,7 +33,7 @@ def preprocessing_pipeline(
 
     # Lemmatize text
     if not lemmatize_func == None:
-        temp_df[[f"{prefix}clean", f"{prefix}clean_lemmatized"]] = temp_df[f"{prefix}clean"].parallel_apply(lemmatize_func).apply(pd.Series)
+        temp_df[[f"{prefix}clean", f"{prefix}clean_lemmatized", f"{prefix}clean_tokens"]] = temp_df[f"{prefix}clean"].parallel_apply(lemmatize_func).apply(pd.Series)
 
         # Check to see if user supplied skill extraction function
         if not extract_skills_func == None:
@@ -72,7 +72,7 @@ def lemmatize_text(text):
     lemmatized_terms = [token.lemma_ for token in doc if token.is_alpha and not token.is_stop]
 
     # Return as tuple
-    return " ".join(original_terms), " ".join(lemmatized_terms)
+    return " ".join(original_terms), " ".join(lemmatized_terms), doc
 
 
 def extract_skills(cleaned_text: str, skills_list=None):
