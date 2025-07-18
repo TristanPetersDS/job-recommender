@@ -1,18 +1,15 @@
-import os
-import re, string, pandas as pd
-import spacy, nltk
+import os, re, string, pandas as pd, gc
+import spacy, nltk, psutil
 from spacy.tokens import DocBin
 from tqdm import tqdm
-
 from pandarallel import pandarallel
 
 from .config import NUM_CORES, SKILLS, DOMAINS, SPACY_MODEL_NAME
 
-# Initialize nlp pipeline
+# Initialize once
+pandarallel.initialize(nb_workers=NUM_CORES)
 _nlp = spacy.load(SPACY_MODEL_NAME)
 
-# Initialize pandarallel for parallelization
-pandarallel.initialize(nb_workers=NUM_CORES)
 
 def preprocessing_pipeline(
     df: pd.DataFrame,
@@ -21,31 +18,91 @@ def preprocessing_pipeline(
     regex_func=None,
     lemmatize_func=None,
     extract_skills_func=None,
-    extract_domains_func=None 
+    extract_domains_func=None,
+    return_docbin: bool = False,
+    batch_size: int = None
 ) -> pd.DataFrame:
-    """
-    Applies the preprocessing pipeline, splitting original and lemmatized into separate columns.
-    """
-    temp_df = df.copy()
-    # Apply RegEx function
     assert regex_func is not None, "regex_func must be provided"
-    temp_df[f"{prefix}clean"] = temp_df[text_column].parallel_apply(regex_func)
 
-    # Lemmatize text
-    if not lemmatize_func == None:
-        temp_df[[f"{prefix}clean", f"{prefix}clean_lemmatized", f"{prefix}clean_tokens"]] = temp_df[f"{prefix}clean"].parallel_apply(lemmatize_func).apply(pd.Series)
-
-        # Check to see if user supplied skill extraction function
-        if not extract_skills_func == None:
-            # Extract skills from original text
-            temp_df[f"{prefix}skills"] = temp_df[f"{prefix}clean"].parallel_apply(extract_skills_func)
+    # Check to see if the dataframe needs special handlings
+    if len(df) <= 5000:
+        temp_df = df.copy()
+        # Apply RegEx function
+        assert regex_func is not None, "regex_func must be provided"
+        temp_df[f"{prefix}clean"] = temp_df[text_column].parallel_apply(regex_func)
     
-            # Check if user supplied domain extraction function
-            if not extract_domains == None:
-                # Extract domains from original text and skills
-                temp_df[f"{prefix}domains"] = temp_df.parallel_apply(lambda row: extract_domains_func(row[f"{prefix}clean"], row[f"{prefix}skills"]), axis=1)
+        # Lemmatize text
+        if not lemmatize_func == None:
+            temp_df[[f"{prefix}clean", f"{prefix}clean_lemmatized", f"{prefix}clean_tokens"]] = temp_df[f"{prefix}clean"].parallel_apply(lemmatize_func).apply(pd.Series)
+    
+            # Check to see if user supplied skill extraction function
+            if not extract_skills_func == None:
+                # Extract skills from original text
+                temp_df[f"{prefix}skills"] = temp_df[f"{prefix}clean"].parallel_apply(extract_skills_func)
+        
+                # Check if user supplied domain extraction function
+                if not extract_domains == None:
+                    # Extract domains from original text and skills
+                    temp_df[f"{prefix}domains"] = temp_df.parallel_apply(lambda row: extract_domains_func(row[f"{prefix}clean"], row[f"{prefix}skills"]), axis=1)
+    
+        return temp_df
+    else:
+        # Dynamic batch size
+        if batch_size is None:
+            total_memory = psutil.virtual_memory().total
+            batch_size = max(100, min(5000, int(len(df) * 1e8 / total_memory)))
+            batch_size = min(batch_size, 5000)
+    
+        print(f"[INFO] Using batch size: {batch_size}")
+    
+        chunks = [df[i:i+batch_size] for i in range(0, len(df), batch_size)]
+        processed_chunks = []
+    
+        for i, chunk in enumerate(tqdm(chunks, desc="Processing batches")):
+            temp_df = chunk.copy()
+            temp_df[f"{prefix}clean"] = temp_df[text_column].parallel_apply(regex_func)
+    
+            if lemmatize_func:
+                result = temp_df[f"{prefix}clean"].parallel_apply(lemmatize_func)
+                unpacked = pd.DataFrame(result.tolist(), columns=[f"{prefix}clean", f"{prefix}clean_lemmatized", f"{prefix}clean_tokens"])
+                
+                # If storing docbin, serialize and drop token list
+                if return_docbin:
+                    docbin = DocBin(store_user_data=True)
+                    for doc in unpacked[f"{prefix}clean_tokens"]:
+                        if isinstance(doc, spacy.tokens.Doc):
+                            docbin.add(doc)
+                    temp_df[f"{prefix}clean_tokens"] = [docbin.to_bytes()] * len(temp_df)
+                else:
+                    temp_df[f"{prefix}clean_tokens"] = unpacked[f"{prefix}clean_tokens"]
+    
+                temp_df[f"{prefix}clean_lemmatized"] = unpacked[f"{prefix}clean_lemmatized"]
+    
+            if extract_skills_func:
+                temp_df[f"{prefix}skills"] = temp_df[f"{prefix}clean"].parallel_apply(extract_skills_func)
+    
+                if extract_domains_func:
+                    temp_df[f"{prefix}domains"] = temp_df.parallel_apply(
+                        lambda row: extract_domains_func(row[f"{prefix}clean"], row[f"{prefix}skills"]),
+                        axis=1
+                    )
+    
+            # Drop unneeded objects & collect garbage
+            del unpacked, result
+            gc.collect()
+    
+            processed_chunks.append(temp_df)
+            del temp_df
+            gc.collect()
+    
+        final_df = pd.concat(processed_chunks, axis=0).reset_index(drop=True)
+    
+        # Final cleanup
+        del processed_chunks
+        gc.collect()
+    
+        return final_df
 
-    return temp_df
 
 def regex_text(text):
     if pd.isna(text):
