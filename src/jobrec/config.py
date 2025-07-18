@@ -10,7 +10,9 @@ from pathlib import Path
 # ╭──────────────────────────────────────────────────────────╮
 # │                   PROJECT CONFIG                         │
 # ╰──────────────────────────────────────────────────────────╯
-QUICKRUN         = True # False for full dataset
+QUICKRUN         = False # False for full dataset
+SPACY_MODE       = True # False if you don't want to save the spaCy doc objects
+
 N_SAMPLE_RESUMES = 2000
 N_SAMPLE_JOBS    = 5000
 RANDOM_SEED      = 42
@@ -18,7 +20,7 @@ NUM_CORES        = os.cpu_count() or 4
 
 
 # ╭──────────────────────────────────────────────────────────╮
-# │                       PATHS                              │
+# │                       PATHS/NAMES                        │
 # ╰──────────────────────────────────────────────────────────╯
 ROOT_DIR: Path     = Path(__file__).resolve().parents[2]
 
@@ -33,10 +35,23 @@ EMB_DIR            = ROOT_DIR / "embeddings"
 REPORT_DIR         = ROOT_DIR / "reports"
 FIGURES_DIR        = REPORT_DIR / "figures"
 
+if QUICKRUN:
+    RUN_PREFIX        = "sample_"
+    JOB_NAME          = f"{RUN_PREFIX}jobs_{N_SAMPLE_JOBS}"
+    RESUME_NAME       = f"{RUN_PREFIX}resumes_{N_SAMPLE_RESUMES}"
+    JOB_CORPUS_DIR    = CORPUS_DATA_DIR / JOB_NAME
+    RESUME_CORPUS_DIR = CORPUS_DATA_DIR / RESUME_NAME
+else:
+    RUN_PREFIX        = "full_"
+    JOB_NAME          = f"{RUN_PREFIX}jobs"
+    RESUME_NAME       = f"{RUN_PREFIX}resumes"
+    JOB_CORPUS_DIR    = CORPUS_DATA_DIR / JOB_NAME
+    RESUME_CORPUS_DIR = CORPUS_DATA_DIR / RESUME_NAME
+
 # create dirs if they don't exist (safe in import time)
 for _p in (
     INTERIM_DATA_DIR, PROCESSED_DATA_DIR, MODELS_DIR,
-    EMB_DIR, FIGURES_DIR, CORPUS_DATA_DIR
+    EMB_DIR, FIGURES_DIR, CORPUS_DATA_DIR, JOB_CORPUS_DIR, RESUME_CORPUS_DIR
 ):
     _p.mkdir(parents=True, exist_ok=True)
 
