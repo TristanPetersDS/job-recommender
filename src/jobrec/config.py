@@ -1,19 +1,13 @@
-"""
-Centralised settings so you can swap components or paths by editing ONE file.
-Every notebook / module should simply:
-    from src import config
-"""
-
 import os
 from pathlib import Path
 
 # ╭──────────────────────────────────────────────────────────╮
 # │                   PROJECT CONFIG                         │
 # ╰──────────────────────────────────────────────────────────╯
-QUICKRUN         = False # False for full dataset
+QUICKRUN         = True # False for full dataset
 SPACY_MODE       = True # False if you don't want to save the spaCy doc objects
 
-N_SAMPLE_RESUMES = 2000
+N_SAMPLE_RESUMES = 1000
 N_SAMPLE_JOBS    = 5000
 RANDOM_SEED      = 42
 NUM_CORES        = os.cpu_count() or 4
@@ -26,6 +20,7 @@ ROOT_DIR: Path     = Path(__file__).resolve().parents[2]
 
 DATA_DIR           = ROOT_DIR / "data"
 RAW_DATA_DIR       = DATA_DIR / "raw"
+CLEANED_DATA_DIR   = DATA_DIR / "cleaned"
 INTERIM_DATA_DIR   = DATA_DIR / "interim"
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
 CORPUS_DATA_DIR    = INTERIM_DATA_DIR / "corpus"
@@ -48,9 +43,9 @@ else:
     JOB_CORPUS_DIR    = CORPUS_DATA_DIR / JOB_NAME
     RESUME_CORPUS_DIR = CORPUS_DATA_DIR / RESUME_NAME
 
-# create dirs if they don't exist (safe in import time)
+# create dirs if they don't exist
 for _p in (
-    INTERIM_DATA_DIR, PROCESSED_DATA_DIR, MODELS_DIR,
+    INTERIM_DATA_DIR, CLEANED_DATA_DIR, PROCESSED_DATA_DIR, MODELS_DIR,
     EMB_DIR, FIGURES_DIR, CORPUS_DATA_DIR, JOB_CORPUS_DIR, RESUME_CORPUS_DIR
 ):
     _p.mkdir(parents=True, exist_ok=True)

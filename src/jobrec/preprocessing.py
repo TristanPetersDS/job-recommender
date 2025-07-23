@@ -1,4 +1,4 @@
-import os, re, string, pandas as pd, gc
+import os, re, string, numpy as np, pandas as pd, gc
 import spacy, nltk, psutil
 from spacy.tokens import DocBin
 from tqdm import tqdm
@@ -139,7 +139,7 @@ def extract_skills(cleaned_text: str, skills_list=None):
     Returns a list of detected skills.
     """
     if pd.isna(cleaned_text) or not isinstance(cleaned_text, str):
-        return []
+        return np.nan
 
     tokens = cleaned_text.split()
 
@@ -159,7 +159,7 @@ def extract_domains(cleaned_text: str, skills=None, domains_list=None):
     Returns a list of detected domains.
     """
     if pd.isna(cleaned_text) or not isinstance(cleaned_text, str):
-        return []
+        return np.nan
 
     tokens = cleaned_text.split()
         
