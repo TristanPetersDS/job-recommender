@@ -1,15 +1,17 @@
 import os, re, string, numpy as np, pandas as pd, gc
+import jsonlines
 import spacy, nltk, psutil
 from spacy.tokens import DocBin
 from tqdm import tqdm
 from pandarallel import pandarallel
 
-from .config import NUM_CORES, SKILLS, DOMAINS, SPACY_MODEL_NAME
+from .config import NUM_CORES, DOMAINS, SPACY_MODEL_NAME, MODELS_DIR
 
 # Initialize once
 pandarallel.initialize(nb_workers=NUM_CORES)
 _nlp = spacy.load(SPACY_MODEL_NAME)
-
+ruler = _nlp.add_pipe('entity_ruler')
+ruler.from_disk(MODELS_DIR/'jz_skill_patterns.jsonl')
 
 def preprocessing_pipeline(
     df: pd.DataFrame,
@@ -19,7 +21,6 @@ def preprocessing_pipeline(
     lemmatize_func=None,
     extract_skills_func=None,
     extract_domains_func=None,
-    return_docbin: bool = False,
     batch_size: int = None
 ) -> pd.DataFrame:
     assert regex_func is not None, "regex_func must be provided"
@@ -33,17 +34,17 @@ def preprocessing_pipeline(
     
         # Lemmatize text
         if not lemmatize_func == None:
-            temp_df[[f"{prefix}clean", f"{prefix}clean_lemmatized", f"{prefix}clean_tokens"]] = temp_df[f"{prefix}clean"].parallel_apply(lemmatize_func).apply(pd.Series)
+            temp_df[[f"{prefix}clean_tokens", f"{prefix}clean_lemmatized"]] = temp_df[f"{prefix}clean"].parallel_apply(lemmatize_func).apply(pd.Series)
     
             # Check to see if user supplied skill extraction function
             if not extract_skills_func == None:
                 # Extract skills from original text
-                temp_df[f"{prefix}skills"] = temp_df[f"{prefix}clean"].parallel_apply(extract_skills_func)
+                temp_df[f"{prefix}skills"] = temp_df[f"{prefix}clean_tokens"].parallel_apply(extract_skills_func)
         
                 # Check if user supplied domain extraction function
                 if not extract_domains == None:
                     # Extract domains from original text and skills
-                    temp_df[f"{prefix}domains"] = temp_df.parallel_apply(lambda row: extract_domains_func(row[f"{prefix}clean"], row[f"{prefix}skills"]), axis=1)
+                    temp_df[f"{prefix}domains"] = temp_df.parallel_apply(lambda row: extract_domains_func(row[f"{prefix}clean_tokens"], row[f"{prefix}skills"]), axis=1)
     
         return temp_df
     else:
@@ -64,17 +65,7 @@ def preprocessing_pipeline(
     
             if lemmatize_func:
                 result = temp_df[f"{prefix}clean"].parallel_apply(lemmatize_func)
-                unpacked = pd.DataFrame(result.tolist(), columns=[f"{prefix}clean", f"{prefix}clean_lemmatized", f"{prefix}clean_tokens"])
-                
-                # If storing docbin, serialize and drop token list
-                if return_docbin:
-                    docbin = DocBin(store_user_data=True)
-                    for doc in unpacked[f"{prefix}clean_tokens"]:
-                        if isinstance(doc, spacy.tokens.Doc):
-                            docbin.add(doc)
-                    temp_df[f"{prefix}clean_tokens"] = [docbin.to_bytes()] * len(temp_df)
-                else:
-                    temp_df[f"{prefix}clean_tokens"] = unpacked[f"{prefix}clean_tokens"]
+                unpacked = pd.DataFrame(result.tolist(), columns=[f"{prefix}clean_tokens", f"{prefix}clean_lemmatized"])
     
                 temp_df[f"{prefix}clean_lemmatized"] = unpacked[f"{prefix}clean_lemmatized"]
     
@@ -117,19 +108,28 @@ def regex_text(text):
     # Replace special chars and digits with space to preserve separation
     text = re.sub(r"[^a-zA-Z\s]", " ", text)                     
     text = re.sub(r"\s+", " ", text).strip()  
+    
+    extra_word=['education', 'business', 'experience', 'play', 'company', 'name', 'citi', 'state', 'work', 'manag', 'project', 'certificate', 'languages', 'color vision'] # extra words
+    words = text.split()  # Split the text into words
+    
+    # Filter out the extra words
+    filter_word = [word for word in words if word not in extra_word]
+    
+    filter_text = ' '.join(filter_word)
 
-    return text
+    return filter_text
 
 def lemmatize_text(text):
     if pd.isna(text):
         return "", ""
 
+    remove_words = ['business', 'education']
     doc = _nlp(text)
     original_terms = [token.text for token in doc if token.is_alpha]
     lemmatized_terms = [token.lemma_ for token in doc if token.is_alpha and not token.is_stop]
 
     # Return as tuple
-    return " ".join(original_terms), " ".join(lemmatized_terms), doc
+    return " ".join(original_terms), " ".join(lemmatized_terms)
 
 
 def extract_skills(cleaned_text: str, skills_list=None):
@@ -141,15 +141,10 @@ def extract_skills(cleaned_text: str, skills_list=None):
     if pd.isna(cleaned_text) or not isinstance(cleaned_text, str):
         return np.nan
 
-    tokens = cleaned_text.split()
+    doc = _nlp(cleaned_text)
+    skills = list(set([ent.text for ent in doc.ents if ent.label_ =='SKILL']))
 
-    if skills_list is None:
-        skills_list=[]
-        for skill in SKILLS:
-            skills_list.append(skill.lower().strip()) # fallback to global SKILLS list
-
-    found_skills = [skill for skill in skills_list if skill in tokens]
-    return found_skills
+    return skills
 
 
 def extract_domains(cleaned_text: str, skills=None, domains_list=None):
@@ -170,12 +165,18 @@ def extract_domains(cleaned_text: str, skills=None, domains_list=None):
 
     found_domains = [domain for domain in domains_list if domain in tokens]
 
-    # Domain inference based on detected skills
-    # Needs overhaul
-    if skills:
-        if any(skill in ['aws', 'kubernetes', 'docker'] for skill in skills):
-            found_domains.append('tech')
-        if any(skill in ['management', 'leadership'] for skill in skills):
-            found_domains.append('business')
-
     return list(set(found_domains))  # unique domains
+
+def get_skills(text, nlp):
+    """
+    Extract skills from a given text using the spaCy model.
+    """
+    doc = nlp(text)
+    skills = [ent.text for ent in doc.ents if ent.label_ == "SKILL"]
+    return skills
+
+def unique_skills(skills):
+    """
+    Remove duplicate skills from a list.
+    """
+    return list(set(skills))

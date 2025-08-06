@@ -5,10 +5,10 @@ from pathlib import Path
 # │                   PROJECT CONFIG                         │
 # ╰──────────────────────────────────────────────────────────╯
 QUICKRUN         = True # False for full dataset
-SPACY_MODE       = True # False if you don't want to save the spaCy doc objects
+SPACY_MODE       = False # False if you don't want to save the spaCy doc objects
 
-N_SAMPLE_RESUMES = 1000
-N_SAMPLE_JOBS    = 5000
+N_SAMPLE_RESUMES = 2000
+N_SAMPLE_JOBS    = 2000
 RANDOM_SEED      = 42
 NUM_CORES        = os.cpu_count() or 4
 
@@ -61,32 +61,68 @@ WORDCLOUD_COLOR_MAP = 'tab10_r'
 # │                     NLP / ML                             │
 # ╰──────────────────────────────────────────────────────────╯
 SBERT_MODEL_NAME      = "sentence-transformers/all-MiniLM-L6-v2"
-SPACY_MODEL_NAME      = "en_core_web_sm"
+SPACY_MODEL_NAME      = "en_core_web_lg"
 
 # Column produced by your keyword-tagger.
 # Swap to "job_categories_ml" when you upgrade to a model-based tagger.
 JOB_CATEGORY_COL      = "job_categories_kw"
 TOP_N_RECOMMEND       = 5
 
-# Harmonised résumé categories (update to match your mapping dict)
-RESUME_CATEGORIES = [
-    "data_science",
-    "software_engineer",
-    "marketing",
-    "sales",
-    "design",
-    "product",
-    "other",
+
+# Expanded List of Industry Domains
+
+DOMAINS = [
+    # Technology, Media & Telecom
+    'information technology', 'tech', 'software', 'hardware', 'telecommunications',
+    'cybersecurity', 'AI & machine learning', 'data science & analytics',
+    'cloud computing', 'media', 'entertainment', 'gaming', 'internet & e-commerce',
+
+    # Finance & Insurance
+    'finance', 'banking', 'investment banking', 'asset management', 'wealth management',
+    'financial services', 'fintech', 'insurance', 'accounting',
+
+    # Healthcare & Life Sciences
+    'healthcare', 'pharmaceuticals', 'biotechnology', 'medical devices', 'hospitals',
+    'health insurance', 'mental health care', 'veterinary',
+
+    # Professional & Business Services
+    'consulting', 'management consulting', 'legal', 'human resources', 'staffing & recruiting',
+    'corporate services', 'market research',
+
+    # Retail & Consumer Goods
+    'retail', 'e-commerce', 'consumer goods', 'fashion & apparel', 'luxury goods',
+    'food & beverage', 'cosmetics',
+
+    # Manufacturing & Industrials
+    'manufacturing', 'automotive', 'aerospace & defense', 'chemicals', 'machinery',
+    'electronics manufacturing', 'industrial automation',
+
+    # Energy & Utilities
+    'energy', 'oil & gas', 'renewable energy', 'solar', 'wind', 'utilities',
+    'power generation', 'water treatment',
+
+    # Construction, Real Estate & Infrastructure
+    'construction', 'real estate', 'architecture', 'civil engineering',
+    'property management',
+
+    # Transportation & Logistics
+    'logistics', 'supply chain', 'transportation', 'aviation', 'maritime',
+    'trucking', 'warehousing', 'freight',
+
+    # Hospitality & Services
+    'hospitality', 'travel & tourism', 'food service', 'restaurants', 'events services',
+    'sports & recreation',
+
+    # Public Sector & Non-Profit
+    'government', 'public administration', 'defense', 'education', 'higher education',
+    'non-profit', 'think tanks', 'social assistance',
+
+    # Creative & Marketing
+    'marketing', 'advertising', 'public relations', 'design', 'publishing',
+
+    # Agriculture & Natural Resources
+    'agriculture', 'agritech', 'farming', 'forestry', 'fishing', 'mining & metals'
 ]
-
-# List of Job Skills
-SKILLS  = ['javascript', 'node.js', 'aws', 'kubernetes', 'go lang', 'ruby', 'python', 'sql', 'java', 
-          'docker', 'html', 'management', 'engineering', 'marketing', 'design', 'sales', 'software', 
-          'development', 'communication', 'leadership', 'installation', 'technical', 'automation', 'power systems']
-
-# List of Industry Domains
-DOMAINS = ['healthcare', 'finance', 'tech', 'education', 'manufacturing', 'retail', 'sales', 
-           'construction', 'hospitality', 'engineering', 'legal', 'marketing', 'government']
 
 # ╭──────────────────────────────────────────────────────────╮
 # │                 Logging / Verbosity                      │
