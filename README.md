@@ -62,7 +62,7 @@ graph LR
 - **Stage 1**: TF-IDF generates 50 high-similarity candidates (fast pre-filtering)
 - **Stage 2**: SBERT re-ranks using semantic understanding (quality enhancement)
 - **Domain Bridge**: Career-aware filtering for relevant industry transitions
-- **LLM Evaluation**: GPT-4 powered relevance assessment with explanations
+- **LLM Evaluation**: Meta Llama 3.1 8B Instruct model powered relevance assessment with explanations
 
 ### Advanced Features
 
