@@ -25,9 +25,9 @@ tqdm~=4.66
 ipywidgets~=8.1
 jupyterlab~=4.2
 
-# ─── Future ATS / LLM step ────────────────────────────
-#openai~=1.30
-#python-dotenv~=1.0
+# ─── LLM Evaluation (used in final results) ────────────────────────────
+openai~=1.30
+python-dotenv~=1.0
 
 # ─── Other ──────────────────
 pyarrow

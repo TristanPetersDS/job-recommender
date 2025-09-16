@@ -8,7 +8,7 @@ QUICKRUN         = True # False for full dataset
 SPACY_MODE       = False # False if you don't want to save the spaCy doc objects
 
 N_SAMPLE_RESUMES = 2000
-N_SAMPLE_JOBS    = 2000
+N_SAMPLE_JOBS    = 10000
 RANDOM_SEED      = 42
 NUM_CORES        = os.cpu_count() or 4
 
@@ -70,7 +70,6 @@ TOP_N_RECOMMEND       = 5
 
 
 # Expanded List of Industry Domains
-
 DOMAINS = [
     # Technology, Media & Telecom
     'information technology', 'tech', 'software', 'hardware', 'telecommunications',
