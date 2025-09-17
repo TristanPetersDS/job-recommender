@@ -62,7 +62,7 @@ graph LR
 - **Stage 1**: TF-IDF generates 50 high-similarity candidates (fast pre-filtering)
 - **Stage 2**: SBERT re-ranks using semantic understanding (quality enhancement)
 - **Domain Bridge**: Career-aware filtering for relevant industry transitions
-- **LLM Evaluation**: GPT-4 powered relevance assessment with explanations
+- **LLM Evaluation**: Meta Llama 3.1 8B Instruct model powered relevance assessment with explanations
 
 ### Advanced Features
 
@@ -360,7 +360,7 @@ batch_scores = llm_evaluator.evaluate_batch(
 ```bibtex
 @project{job_recommendation_system_2025,
   title={AI-Powered Job Recommendation System with Semantic Understanding},
-  author={[Your Name]},
+  author={Tristan Peters},
   year={2025},
   institution={Springboard Data Science Career Track},
   type={Capstone Project}
@@ -368,15 +368,6 @@ batch_scores = llm_evaluator.evaluate_batch(
 ```
 
 **License**: Educational use only. All datasets are publicly available and properly attributed.
-
----
-
-## 🔗 Connect & Collaborate
-
-**Portfolio**: [Your Portfolio URL]
-**LinkedIn**: [Your LinkedIn Profile]
-**GitHub**: [Your GitHub Profile]
-**Email**: [Your Email]
 
 > *This project demonstrates advanced NLP techniques, machine learning pipeline development, and real-world AI application. Perfect for data science portfolios and academic research.*
 
